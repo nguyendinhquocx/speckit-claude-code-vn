@@ -1,249 +1,255 @@
 ---
-description: Create or update the feature specification from a natural language feature description.
+description: Tạo hoặc cập nhật đặc tả tính năng từ mô tả tính năng bằng ngôn ngữ tự nhiên.
 ---
 
-## User Input
+## Input từ User
 
 ```text
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+Mày **PHẢI** xem xét input từ user trước khi tiếp tục (nếu không rỗng).
 
 ## Outline
 
-The text the user typed after `/speckit.specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+Văn bản mà user gõ sau `/speckit.specify` trong triggering message **chính là** mô tả tính năng. Giả định mày luôn có nó available trong conversation này ngay cả khi `$ARGUMENTS` xuất hiện literally bên dưới. Đừng yêu cầu user lặp lại trừ khi họ cung cấp command rỗng.
 
-Given that feature description, do this:
+Với mô tả tính năng đó, làm như sau:
 
-1. **Generate a concise short name** (2-4 words) for the branch:
-   - Analyze the feature description and extract the most meaningful keywords
-   - Create a 2-4 word short name that captures the essence of the feature
-   - Use action-noun format when possible (e.g., "add-user-auth", "fix-payment-bug")
-   - Preserve technical terms and acronyms (OAuth2, API, JWT, etc.)
-   - Keep it concise but descriptive enough to understand the feature at a glance
-   - Examples:
-     - "I want to add user authentication" → "user-auth"
-     - "Implement OAuth2 integration for the API" → "oauth2-api-integration"
-     - "Create a dashboard for analytics" → "analytics-dashboard"
-     - "Fix payment processing timeout bug" → "fix-payment-timeout"
+1. **Generate một short name ngắn gọn** (2-4 từ) cho branch:
+   - Phân tích mô tả tính năng và trích xuất các keywords ý nghĩa nhất
+   - Tạo short name 2-4 từ capture được essence của tính năng
+   - Dùng action-noun format khi có thể (ví dụ: "add-user-auth", "fix-payment-bug")
+   - Giữ nguyên technical terms và acronyms (OAuth2, API, JWT, etc.)
+   - Giữ ngắn gọn nhưng đủ descriptive để hiểu tính năng ngay lập tức
+   - Ví dụ:
+     - "Tôi muốn thêm xác thực người dùng" → "user-auth"
+     - "Triển khai OAuth2 integration cho API" → "oauth2-api-integration"
+     - "Tạo dashboard cho analytics" → "analytics-dashboard"
+     - "Sửa bug timeout xử lý thanh toán" → "fix-payment-timeout"
 
-2. **Check for existing branches before creating new one**:
-   
-   a. First, fetch all remote branches to ensure we have the latest information:
+2. **Kiểm tra branches hiện có trước khi tạo mới**:
+
+   a. Đầu tiên, fetch tất cả remote branches để đảm bảo có thông tin mới nhất:
       ```bash
       git fetch --all --prune
       ```
-   
-   b. Find the highest feature number across all sources for the short-name:
+
+   b. Tìm feature number cao nhất across all sources cho short-name:
       - Remote branches: `git ls-remote --heads origin | grep -E 'refs/heads/[0-9]+-<short-name>$'`
       - Local branches: `git branch | grep -E '^[* ]*[0-9]+-<short-name>$'`
-      - Specs directories: Check for directories matching `specs/[0-9]+-<short-name>`
-   
-   c. Determine the next available number:
-      - Extract all numbers from all three sources
-      - Find the highest number N
-      - Use N+1 for the new branch number
-   
-   d. Run the script `.specify/scripts/powershell/create-new-feature.ps1 -Json "$ARGUMENTS"` with the calculated number and short-name:
-      - Pass `--number N+1` and `--short-name "your-short-name"` along with the feature description
+      - Specs directories: Kiểm tra directories matching `specs/[0-9]+-<short-name>`
+
+   c. Xác định số tiếp theo available:
+      - Extract tất cả numbers từ cả ba sources
+      - Tìm số cao nhất N
+      - Dùng N+1 cho branch number mới
+
+   d. Chạy script `.specify/scripts/powershell/create-new-feature.ps1 -Json "$ARGUMENTS"` với số đã tính và short-name:
+      - Pass `--number N+1` và `--short-name "your-short-name"` cùng với mô tả tính năng
       - Bash example: `.specify/scripts/powershell/create-new-feature.ps1 -Json "$ARGUMENTS" --json --number 5 --short-name "user-auth" "Add user authentication"`
       - PowerShell example: `.specify/scripts/powershell/create-new-feature.ps1 -Json "$ARGUMENTS" -Json -Number 5 -ShortName "user-auth" "Add user authentication"`
-   
-   **IMPORTANT**:
-   - Check all three sources (remote branches, local branches, specs directories) to find the highest number
-   - Only match branches/directories with the exact short-name pattern
-   - If no existing branches/directories found with this short-name, start with number 1
-   - You must only ever run this script once per feature
-   - The JSON is provided in the terminal as output - always refer to it to get the actual content you're looking for
-   - The JSON output will contain BRANCH_NAME and SPEC_FILE paths
-   - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot")
 
-3. Load `.specify/templates/spec-template.md` to understand required sections.
+   **QUAN TRỌNG**:
+   - Kiểm tra cả ba sources (remote branches, local branches, specs directories) để tìm số cao nhất
+   - Chỉ match branches/directories với exact short-name pattern
+   - Nếu không tìm thấy branches/directories nào với short-name này, bắt đầu với số 1
+   - Mày chỉ được chạy script này MỘT LẦN DUY NHẤT mỗi feature
+   - JSON được cung cấp trong terminal output - luôn tham chiếu nó để lấy nội dung thực tế mày đang tìm
+   - JSON output sẽ chứa BRANCH_NAME và SPEC_FILE paths
+   - Với single quotes trong args như "I'm Groot", dùng escape syntax: ví dụ 'I'\''m Groot' (hoặc double-quote nếu có thể: "I'm Groot")
 
-4. Follow this execution flow:
+3. Load `.specify/templates/spec-template.md` để hiểu các sections bắt buộc.
 
-    1. Parse user description from Input
-       If empty: ERROR "No feature description provided"
-    2. Extract key concepts from description
+4. Follow execution flow này:
+
+    1. Parse mô tả user từ Input
+       Nếu rỗng: ERROR "Không có mô tả tính năng được cung cấp"
+    2. Extract các khái niệm chính từ mô tả
        Identify: actors, actions, data, constraints
-    3. For unclear aspects:
-       - Make informed guesses based on context and industry standards
-       - Only mark with [NEEDS CLARIFICATION: specific question] if:
-         - The choice significantly impacts feature scope or user experience
-         - Multiple reasonable interpretations exist with different implications
-         - No reasonable default exists
-       - **LIMIT: Maximum 3 [NEEDS CLARIFICATION] markers total**
-       - Prioritize clarifications by impact: scope > security/privacy > user experience > technical details
-    4. Fill User Scenarios & Testing section
-       If no clear user flow: ERROR "Cannot determine user scenarios"
-    5. Generate Functional Requirements
-       Each requirement must be testable
-       Use reasonable defaults for unspecified details (document assumptions in Assumptions section)
-    6. Define Success Criteria
-       Create measurable, technology-agnostic outcomes
-       Include both quantitative metrics (time, performance, volume) and qualitative measures (user satisfaction, task completion)
-       Each criterion must be verifiable without implementation details
-    7. Identify Key Entities (if data involved)
-    8. Return: SUCCESS (spec ready for planning)
+    3. Với các khía cạnh chưa rõ ràng:
+       - Đưa ra suy đoán có căn cứ dựa trên context và industry standards
+       - Chỉ đánh dấu với [CẦN LÀM RÕ: câu hỏi cụ thể] nếu:
+         - Lựa chọn ảnh hưởng đáng kể đến phạm vi tính năng hoặc trải nghiệm người dùng
+         - Có nhiều cách hiểu hợp lý với hệ quả khác nhau
+         - Không có giá trị mặc định hợp lý
+       - **GIỚI HẠN: Tối đa 3 markers [CẦN LÀM RÕ] tổng cộng**
+       - Ưu tiên clarifications theo impact: scope > security/privacy > user experience > technical details
+    4. Điền section Kịch bản Người dùng & Kiểm thử
+       Nếu không có user flow rõ ràng: ERROR "Không thể xác định kịch bản người dùng"
+    5. Generate Yêu cầu Chức năng
+       Mỗi yêu cầu phải testable
+       Dùng giá trị mặc định hợp lý cho chi tiết chưa chỉ định (document assumptions trong section Giả định)
+    6. Define Tiêu chí Thành công
+       Tạo kết quả measurable, độc lập công nghệ
+       Bao gồm cả quantitative metrics (time, performance, volume) và qualitative measures (user satisfaction, task completion)
+       Mỗi tiêu chí phải verifiable mà không cần implementation details
+    7. Identify Key Entities (nếu liên quan đến data)
+    8. Return: SUCCESS (spec sẵn sàng cho planning)
 
-5. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
+5. Viết specification vào SPEC_FILE sử dụng cấu trúc template, thay thế placeholders bằng chi tiết cụ thể derived từ mô tả tính năng (arguments) trong khi preserve thứ tự sections và headings.
 
-6. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
+   **NGÔN NGỮ OUTPUT BẮT BUỘC**:
+   - **TẤT CẢ nội dung mô tả PHẢI bằng TIẾNG VIỆT**
+   - Giữ nguyên: technical terms (API, REST, OAuth), entity names (User, Product), keywords ([CẦN LÀM RÕ], FR-001), file paths
+   - Trước khi viết file, tự kiểm tra: "Spec này có người Việt không biết tiếng Anh đọc được không?"
+   - Nếu phát hiện câu mô tả toàn tiếng Anh → DỪNG và viết lại bằng tiếng Việt
 
-   a. **Create Spec Quality Checklist**: Generate a checklist file at `FEATURE_DIR/checklists/requirements.md` using the checklist template structure with these validation items:
+6. **Validation Chất lượng Specification**: Sau khi viết spec ban đầu, validate nó theo tiêu chí chất lượng:
+
+   a. **Tạo Spec Quality Checklist**: Generate file checklist tại `FEATURE_DIR/checklists/requirements.md` sử dụng cấu trúc checklist template với các validation items này:
 
       ```markdown
-      # Specification Quality Checklist: [FEATURE NAME]
-      
-      **Purpose**: Validate specification completeness and quality before proceeding to planning
-      **Created**: [DATE]
-      **Feature**: [Link to spec.md]
-      
-      ## Content Quality
-      
-      - [ ] No implementation details (languages, frameworks, APIs)
-      - [ ] Focused on user value and business needs
-      - [ ] Written for non-technical stakeholders
-      - [ ] All mandatory sections completed
-      
-      ## Requirement Completeness
-      
-      - [ ] No [NEEDS CLARIFICATION] markers remain
-      - [ ] Requirements are testable and unambiguous
-      - [ ] Success criteria are measurable
-      - [ ] Success criteria are technology-agnostic (no implementation details)
-      - [ ] All acceptance scenarios are defined
-      - [ ] Edge cases are identified
-      - [ ] Scope is clearly bounded
-      - [ ] Dependencies and assumptions identified
-      
-      ## Feature Readiness
-      
-      - [ ] All functional requirements have clear acceptance criteria
+      # Checklist Chất lượng Specification: [TÊN TÍNH NĂNG]
+
+      **Mục đích**: Validate tính đầy đủ và chất lượng specification trước khi tiến hành planning
+      **Ngày tạo**: [DATE]
+      **Feature**: [Link tới spec.md]
+
+      ## Chất lượng Nội dung
+
+      - [ ] Không có implementation details (ngôn ngữ, frameworks, APIs)
+      - [ ] Tập trung vào giá trị cho user và business needs
+      - [ ] Viết cho non-technical stakeholders
+      - [ ] Tất cả mandatory sections đã hoàn thành
+
+      ## Tính Đầy đủ Yêu cầu
+
+      - [ ] Không còn markers [CẦN LÀM RÕ]
+      - [ ] Requirements testable và rõ ràng
+      - [ ] Success criteria đo lường được
+      - [ ] Success criteria độc lập công nghệ (không có implementation details)
+      - [ ] Tất cả acceptance scenarios đã được định nghĩa
+      - [ ] Edge cases đã được identify
+      - [ ] Scope được giới hạn rõ ràng
+      - [ ] Dependencies và assumptions đã được identify
+
+      ## Sẵn sàng Feature
+
+      - [ ] Tất cả functional requirements có acceptance criteria rõ ràng
       - [ ] User scenarios cover primary flows
-      - [ ] Feature meets measurable outcomes defined in Success Criteria
-      - [ ] No implementation details leak into specification
-      
-      ## Notes
-      
-      - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`
+      - [ ] Feature đáp ứng measurable outcomes định nghĩa trong Success Criteria
+      - [ ] Không có implementation details leak vào specification
+
+      ## Ghi chú
+
+      - Items đánh dấu incomplete cần spec updates trước `/speckit.clarify` hoặc `/speckit.plan`
       ```
 
-   b. **Run Validation Check**: Review the spec against each checklist item:
-      - For each item, determine if it passes or fails
-      - Document specific issues found (quote relevant spec sections)
+   b. **Chạy Validation Check**: Review spec theo từng checklist item:
+      - Với mỗi item, xác định nó pass hay fail
+      - Document các issues cụ thể tìm thấy (quote các spec sections liên quan)
 
-   c. **Handle Validation Results**:
+   c. **Xử lý Validation Results**:
 
-      - **If all items pass**: Mark checklist complete and proceed to step 6
+      - **Nếu tất cả items pass**: Đánh dấu checklist complete và tiến tới bước 7
 
-      - **If items fail (excluding [NEEDS CLARIFICATION])**:
-        1. List the failing items and specific issues
-        2. Update the spec to address each issue
-        3. Re-run validation until all items pass (max 3 iterations)
-        4. If still failing after 3 iterations, document remaining issues in checklist notes and warn user
+      - **Nếu items fail (excluding [CẦN LÀM RÕ])**:
+        1. List các failing items và issues cụ thể
+        2. Update spec để address từng issue
+        3. Re-run validation cho đến khi tất cả items pass (max 3 iterations)
+        4. Nếu vẫn failing sau 3 iterations, document remaining issues trong checklist notes và warn user
 
-      - **If [NEEDS CLARIFICATION] markers remain**:
-        1. Extract all [NEEDS CLARIFICATION: ...] markers from the spec
-        2. **LIMIT CHECK**: If more than 3 markers exist, keep only the 3 most critical (by scope/security/UX impact) and make informed guesses for the rest
-        3. For each clarification needed (max 3), present options to user in this format:
+      - **Nếu còn markers [CẦN LÀM RÕ]**:
+        1. Extract tất cả markers [CẦN LÀM RÕ: ...] từ spec
+        2. **LIMIT CHECK**: Nếu có hơn 3 markers, chỉ giữ 3 cái critical nhất (theo scope/security/UX impact) và đưa ra suy đoán có căn cứ cho phần còn lại
+        3. Với mỗi clarification cần thiết (max 3), present options cho user theo format này:
 
            ```markdown
-           ## Question [N]: [Topic]
-           
-           **Context**: [Quote relevant spec section]
-           
-           **What we need to know**: [Specific question from NEEDS CLARIFICATION marker]
-           
-           **Suggested Answers**:
-           
-           | Option | Answer | Implications |
-           |--------|--------|--------------|
-           | A      | [First suggested answer] | [What this means for the feature] |
-           | B      | [Second suggested answer] | [What this means for the feature] |
-           | C      | [Third suggested answer] | [What this means for the feature] |
-           | Custom | Provide your own answer | [Explain how to provide custom input] |
-           
-           **Your choice**: _[Wait for user response]_
+           ## Câu hỏi [N]: [Topic]
+
+           **Ngữ cảnh**: [Quote spec section liên quan]
+
+           **Cần biết**: [Câu hỏi cụ thể từ marker CẦN LÀM RÕ]
+
+           **Các lựa chọn đề xuất**:
+
+           | Option | Trả lời | Hệ quả |
+           |--------|---------|--------|
+           | A      | [Trả lời đề xuất thứ nhất] | [Điều này có nghĩa gì cho tính năng] |
+           | B      | [Trả lời đề xuất thứ hai] | [Điều này có nghĩa gì cho tính năng] |
+           | C      | [Trả lời đề xuất thứ ba] | [Điều này có nghĩa gì cho tính năng] |
+           | Custom | Cung cấp trả lời riêng của bạn | [Giải thích cách cung cấp custom input] |
+
+           **Lựa chọn của bạn**: _[Đợi user response]_
            ```
 
-        4. **CRITICAL - Table Formatting**: Ensure markdown tables are properly formatted:
-           - Use consistent spacing with pipes aligned
-           - Each cell should have spaces around content: `| Content |` not `|Content|`
-           - Header separator must have at least 3 dashes: `|--------|`
-           - Test that the table renders correctly in markdown preview
-        5. Number questions sequentially (Q1, Q2, Q3 - max 3 total)
-        6. Present all questions together before waiting for responses
-        7. Wait for user to respond with their choices for all questions (e.g., "Q1: A, Q2: Custom - [details], Q3: B")
-        8. Update the spec by replacing each [NEEDS CLARIFICATION] marker with the user's selected or provided answer
-        9. Re-run validation after all clarifications are resolved
+        4. **CRITICAL - Table Formatting**: Đảm bảo markdown tables được format đúng:
+           - Dùng spacing nhất quán với pipes aligned
+           - Mỗi cell phải có spaces xung quanh content: `| Content |` không phải `|Content|`
+           - Header separator phải có ít nhất 3 dashes: `|--------|`
+           - Test bảng render đúng trong markdown preview
+        5. Đánh số câu hỏi tuần tự (Q1, Q2, Q3 - max 3 total)
+        6. Present tất cả câu hỏi cùng nhau trước khi đợi responses
+        7. Đợi user respond với lựa chọn cho tất cả câu hỏi (ví dụ: "Q1: A, Q2: Custom - [details], Q3: B")
+        8. Update spec bằng cách thay thế mỗi marker [CẦN LÀM RÕ] với câu trả lời được chọn hoặc cung cấp của user
+        9. Re-run validation sau khi tất cả clarifications được resolve
 
-   d. **Update Checklist**: After each validation iteration, update the checklist file with current pass/fail status
+   d. **Update Checklist**: Sau mỗi validation iteration, update checklist file với current pass/fail status
 
-7. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
+7. Report completion với branch name, spec file path, checklist results, và readiness cho phase tiếp theo (`/speckit.clarify` hoặc `/speckit.plan`).
 
-**NOTE:** The script creates and checks out the new branch and initializes the spec file before writing.
+**LƯU Ý:** Script tạo và checkout branch mới và khởi tạo spec file trước khi viết.
 
 ## General Guidelines
 
 ## Quick Guidelines
 
-- Focus on **WHAT** users need and **WHY**.
-- Avoid HOW to implement (no tech stack, APIs, code structure).
-- Written for business stakeholders, not developers.
-- DO NOT create any checklists that are embedded in the spec. That will be a separate command.
+- Tập trung vào **CÁI GÌ** (WHAT) users cần và **TẠI SAO** (WHY).
+- Tránh LÀM THẾ NÀO (HOW) để implement (no tech stack, APIs, code structure).
+- Viết cho business stakeholders, không phải developers.
+- KHÔNG tạo bất kỳ checklists nào nhúng trong spec. Đó sẽ là command riêng biệt.
 
-### Section Requirements
+### Yêu cầu về Sections
 
-- **Mandatory sections**: Must be completed for every feature
-- **Optional sections**: Include only when relevant to the feature
-- When a section doesn't apply, remove it entirely (don't leave as "N/A")
+- **Mandatory sections**: Phải hoàn thành cho mọi feature
+- **Optional sections**: Chỉ bao gồm khi liên quan đến feature
+- Khi một section không áp dụng, xóa hoàn toàn (đừng để là "N/A")
 
-### For AI Generation
+### Cho AI Generation
 
-When creating this spec from a user prompt:
+Khi tạo spec này từ user prompt:
 
-1. **Make informed guesses**: Use context, industry standards, and common patterns to fill gaps
-2. **Document assumptions**: Record reasonable defaults in the Assumptions section
-3. **Limit clarifications**: Maximum 3 [NEEDS CLARIFICATION] markers - use only for critical decisions that:
-   - Significantly impact feature scope or user experience
-   - Have multiple reasonable interpretations with different implications
-   - Lack any reasonable default
-4. **Prioritize clarifications**: scope > security/privacy > user experience > technical details
-5. **Think like a tester**: Every vague requirement should fail the "testable and unambiguous" checklist item
-6. **Common areas needing clarification** (only if no reasonable default exists):
-   - Feature scope and boundaries (include/exclude specific use cases)
-   - User types and permissions (if multiple conflicting interpretations possible)
-   - Security/compliance requirements (when legally/financially significant)
+1. **Đưa ra suy đoán có căn cứ**: Dùng context, industry standards, và common patterns để lấp khoảng trống
+2. **Document assumptions**: Ghi các giá trị mặc định hợp lý trong section Giả định
+3. **Giới hạn clarifications**: Tối đa 3 markers [CẦN LÀM RÕ] - chỉ dùng cho quyết định critical mà:
+   - Ảnh hưởng đáng kể đến feature scope hoặc user experience
+   - Có nhiều cách hiểu hợp lý với hệ quả khác nhau
+   - Thiếu bất kỳ giá trị mặc định hợp lý nào
+4. **Ưu tiên clarifications**: scope > security/privacy > user experience > technical details
+5. **Tư duy như tester**: Mọi vague requirement phải fail checklist item "testable và rõ ràng"
+6. **Các vấn đề thường cần clarification** (chỉ khi không có giá trị mặc định hợp lý):
+   - Feature scope và boundaries (include/exclude use cases cụ thể)
+   - User types và permissions (nếu có nhiều cách hiểu conflict)
+   - Security/compliance requirements (khi có ý nghĩa pháp lý/tài chính)
 
-**Examples of reasonable defaults** (don't ask about these):
+**Ví dụ về giá trị mặc định hợp lý** (đừng hỏi về những thứ này):
 
-- Data retention: Industry-standard practices for the domain
-- Performance targets: Standard web/mobile app expectations unless specified
-- Error handling: User-friendly messages with appropriate fallbacks
-- Authentication method: Standard session-based or OAuth2 for web apps
-- Integration patterns: RESTful APIs unless specified otherwise
+- Data retention: Thực hành chuẩn ngành cho domain đó
+- Performance targets: Kỳ vọng chuẩn web/mobile app trừ khi có chỉ định
+- Error handling: Messages thân thiện với user và fallbacks phù hợp
+- Authentication method: Session-based chuẩn hoặc OAuth2 cho web apps
+- Integration patterns: RESTful APIs trừ khi có chỉ định khác
 
-### Success Criteria Guidelines
+### Hướng dẫn Success Criteria
 
-Success criteria must be:
+Success criteria phải:
 
-1. **Measurable**: Include specific metrics (time, percentage, count, rate)
-2. **Technology-agnostic**: No mention of frameworks, languages, databases, or tools
-3. **User-focused**: Describe outcomes from user/business perspective, not system internals
-4. **Verifiable**: Can be tested/validated without knowing implementation details
+1. **Đo lường được**: Bao gồm metrics cụ thể (time, percentage, count, rate)
+2. **Độc lập công nghệ**: Không đề cập frameworks, languages, databases, hoặc tools
+3. **Tập trung vào user**: Mô tả outcomes từ góc nhìn user/business, không phải system internals
+4. **Có thể verify**: Có thể test/validate mà không cần biết implementation details
 
-**Good examples**:
+**Ví dụ tốt**:
 
-- "Users can complete checkout in under 3 minutes"
-- "System supports 10,000 concurrent users"
-- "95% of searches return results in under 1 second"
-- "Task completion rate improves by 40%"
+- "Người dùng có thể hoàn thành checkout trong vòng dưới 3 phút"
+- "Hệ thống hỗ trợ 10,000 người dùng đồng thời"
+- "95% tìm kiếm trả về kết quả trong vòng dưới 1 giây"
+- "Tỷ lệ hoàn thành task tăng 40%"
 
-**Bad examples** (implementation-focused):
+**Ví dụ tệ** (tập trung vào implementation):
 
-- "API response time is under 200ms" (too technical, use "Users see results instantly")
-- "Database can handle 1000 TPS" (implementation detail, use user-facing metric)
-- "React components render efficiently" (framework-specific)
-- "Redis cache hit rate above 80%" (technology-specific)
+- "API response time dưới 200ms" (quá kỹ thuật, dùng "Người dùng thấy kết quả ngay lập tức")
+- "Database có thể xử lý 1000 TPS" (implementation detail, dùng user-facing metric)
+- "React components render hiệu quả" (framework-specific)
+- "Redis cache hit rate trên 80%" (technology-specific)

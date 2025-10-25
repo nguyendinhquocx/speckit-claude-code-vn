@@ -1,78 +1,78 @@
 ---
-description: Create or update the project constitution from interactive or provided principle inputs, ensuring all dependent templates stay in sync
+description: Tạo hoặc cập nhật project constitution từ interactive hoặc provided principle inputs, đảm bảo tất cả dependent templates stay in sync
 ---
 
-## User Input
+## Input từ User
 
 ```text
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+Mày **PHẢI** xem xét input từ user trước khi tiếp tục (nếu không rỗng).
 
 ## Outline
 
-You are updating the project constitution at `.specify/memory/constitution.md`. This file is a TEMPLATE containing placeholder tokens in square brackets (e.g. `[PROJECT_NAME]`, `[PRINCIPLE_1_NAME]`). Your job is to (a) collect/derive concrete values, (b) fill the template precisely, and (c) propagate any amendments across dependent artifacts.
+Mày đang update project constitution tại `.specify/memory/constitution.md`. File này là TEMPLATE chứa placeholder tokens trong square brackets (ví dụ: `[PROJECT_NAME]`, `[PRINCIPLE_1_NAME]`). Công việc của mày là (a) collect/derive concrete values, (b) fill template precisely, và (c) propagate bất kỳ amendments nào across dependent artifacts.
 
-Follow this execution flow:
+Follow execution flow này:
 
-1. Load the existing constitution template at `.specify/memory/constitution.md`.
-   - Identify every placeholder token of the form `[ALL_CAPS_IDENTIFIER]`.
-   **IMPORTANT**: The user might require less or more principles than the ones used in the template. If a number is specified, respect that - follow the general template. You will update the doc accordingly.
+1. Load existing constitution template tại `.specify/memory/constitution.md`.
+   - Identify mọi placeholder token của form `[ALL_CAPS_IDENTIFIER]`.
+   **QUAN TRỌNG**: User có thể require ít hoặc nhiều principles hơn những cái được dùng trong template. Nếu một number được specified, respect đó - follow general template. Mày sẽ update doc accordingly.
 
-2. Collect/derive values for placeholders:
-   - If user input (conversation) supplies a value, use it.
-   - Otherwise infer from existing repo context (README, docs, prior constitution versions if embedded).
-   - For governance dates: `RATIFICATION_DATE` is the original adoption date (if unknown ask or mark TODO), `LAST_AMENDED_DATE` is today if changes are made, otherwise keep previous.
-   - `CONSTITUTION_VERSION` must increment according to semantic versioning rules:
-     - MAJOR: Backward incompatible governance/principle removals or redefinitions.
-     - MINOR: New principle/section added or materially expanded guidance.
+2. Collect/derive values cho placeholders:
+   - Nếu user input (conversation) supplies một value, dùng nó.
+   - Otherwise infer từ existing repo context (README, docs, prior constitution versions nếu embedded).
+   - Cho governance dates: `RATIFICATION_DATE` là original adoption date (nếu unknown hỏi hoặc đánh dấu TODO), `LAST_AMENDED_DATE` là today nếu changes được made, otherwise giữ previous.
+   - `CONSTITUTION_VERSION` phải increment theo semantic versioning rules:
+     - MAJOR: Backward incompatible governance/principle removals hoặc redefinitions.
+     - MINOR: New principle/section added hoặc materially expanded guidance.
      - PATCH: Clarifications, wording, typo fixes, non-semantic refinements.
-   - If version bump type ambiguous, propose reasoning before finalizing.
+   - Nếu version bump type ambiguous, propose reasoning trước khi finalizing.
 
-3. Draft the updated constitution content:
-   - Replace every placeholder with concrete text (no bracketed tokens left except intentionally retained template slots that the project has chosen not to define yet—explicitly justify any left).
-   - Preserve heading hierarchy and comments can be removed once replaced unless they still add clarifying guidance.
-   - Ensure each Principle section: succinct name line, paragraph (or bullet list) capturing non‑negotiable rules, explicit rationale if not obvious.
-   - Ensure Governance section lists amendment procedure, versioning policy, and compliance review expectations.
+3. Draft updated constitution content:
+   - Thay thế mọi placeholder bằng concrete text (không có bracketed tokens left trừ intentionally retained template slots mà project đã chosen không define yet—explicitly justify bất kỳ cái nào left).
+   - Preserve heading hierarchy và comments có thể removed once replaced trừ khi chúng vẫn add clarifying guidance.
+   - Đảm bảo mỗi Principle section: succinct name line, paragraph (hoặc bullet list) capturing non‑negotiable rules, explicit rationale nếu không obvious.
+   - Đảm bảo Governance section lists amendment procedure, versioning policy, và compliance review expectations.
 
-4. Consistency propagation checklist (convert prior checklist into active validations):
-   - Read `.specify/templates/plan-template.md` and ensure any "Constitution Check" or rules align with updated principles.
-   - Read `.specify/templates/spec-template.md` for scope/requirements alignment—update if constitution adds/removes mandatory sections or constraints.
-   - Read `.specify/templates/tasks-template.md` and ensure task categorization reflects new or removed principle-driven task types (e.g., observability, versioning, testing discipline).
-   - Read each command file in `.specify/templates/commands/*.md` (including this one) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required.
-   - Read any runtime guidance docs (e.g., `README.md`, `docs/quickstart.md`, or agent-specific guidance files if present). Update references to principles changed.
+4. Consistency propagation checklist (convert prior checklist thành active validations):
+   - Đọc `.specify/templates/plan-template.md` và đảm bảo bất kỳ "Constitution Check" hoặc rules nào align với updated principles.
+   - Đọc `.specify/templates/spec-template.md` cho scope/requirements alignment—update nếu constitution adds/removes mandatory sections hoặc constraints.
+   - Đọc `.specify/templates/tasks-template.md` và đảm bảo task categorization reflects new hoặc removed principle-driven task types.
+   - Đọc mỗi command file trong `.claude/commands/*.md` để verify không có outdated references remain.
+   - Đọc bất kỳ runtime guidance docs nào (ví dụ: `README.md`, `docs/quickstart.md`). Update references tới principles changed.
 
-5. Produce a Sync Impact Report (prepend as an HTML comment at top of the constitution file after update):
+5. Tạo Sync Impact Report (prepend như HTML comment ở top của constitution file sau update):
    - Version change: old → new
-   - List of modified principles (old title → new title if renamed)
+   - List của modified principles (old title → new title nếu renamed)
    - Added sections
    - Removed sections
-   - Templates requiring updates (✅ updated / ⚠ pending) with file paths
-   - Follow-up TODOs if any placeholders intentionally deferred.
+   - Templates requiring updates (✅ updated / ⚠ pending) với file paths
+   - Follow-up TODOs nếu bất kỳ placeholders nào intentionally deferred.
 
-6. Validation before final output:
-   - No remaining unexplained bracket tokens.
+6. Validation trước final output:
+   - Không còn unexplained bracket tokens.
    - Version line matches report.
    - Dates ISO format YYYY-MM-DD.
-   - Principles are declarative, testable, and free of vague language ("should" → replace with MUST/SHOULD rationale where appropriate).
+   - Principles là declarative, testable, và free of vague language.
 
-7. Write the completed constitution back to `.specify/memory/constitution.md` (overwrite).
+7. Write completed constitution trở lại `.specify/memory/constitution.md` (overwrite).
 
-8. Output a final summary to the user with:
-   - New version and bump rationale.
-   - Any files flagged for manual follow-up.
-   - Suggested commit message (e.g., `docs: amend constitution to vX.Y.Z (principle additions + governance update)`).
+8. Output final summary cho user với:
+   - New version và bump rationale.
+   - Bất kỳ files nào flagged cho manual follow-up.
+   - Suggested commit message (ví dụ: `docs: amend constitution to vX.Y.Z (principle additions + governance update)`).
 
 Formatting & Style Requirements:
 
-- Use Markdown headings exactly as in the template (do not demote/promote levels).
-- Wrap long rationale lines to keep readability (<100 chars ideally) but do not hard enforce with awkward breaks.
-- Keep a single blank line between sections.
-- Avoid trailing whitespace.
+- Dùng Markdown headings exactly như trong template (không demote/promote levels).
+- Wrap long rationale lines để giữ readability (<100 chars ideally) nhưng không hard enforce với awkward breaks.
+- Giữ single blank line giữa sections.
+- Tránh trailing whitespace.
 
-If the user supplies partial updates (e.g., only one principle revision), still perform validation and version decision steps.
+Nếu user supplies partial updates (ví dụ: chỉ một principle revision), vẫn perform validation và version decision steps.
 
-If critical info missing (e.g., ratification date truly unknown), insert `TODO(<FIELD_NAME>): explanation` and include in the Sync Impact Report under deferred items.
+Nếu critical info missing (ví dụ: ratification date truly unknown), insert `TODO(<FIELD_NAME>): explanation` và include trong Sync Impact Report dưới deferred items.
 
-Do not create a new template; always operate on the existing `.specify/memory/constitution.md` file.
+Không tạo template mới; luôn operate trên existing `.specify/memory/constitution.md` file.

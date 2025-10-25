@@ -1,183 +1,171 @@
 ---
-description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
+description: Thực hiện phân tích cross-artifact consistency và quality analysis non-destructive across spec.md, plan.md, và tasks.md sau task generation.
 ---
 
-## User Input
+## Input từ User
 
 ```text
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+Mày **PHẢI** xem xét input từ user trước khi tiếp tục (nếu không rỗng).
 
-## Goal
+## Mục tiêu
 
-Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/speckit.tasks` has successfully produced a complete `tasks.md`.
+Identify inconsistencies, duplications, ambiguities, và underspecified items across ba core artifacts (`spec.md`, `plan.md`, `tasks.md`) trước implementation. Command này PHẢI chạy chỉ sau khi `/speckit.tasks` đã successfully produced complete `tasks.md`.
 
 ## Operating Constraints
 
-**STRICTLY READ-ONLY**: Do **not** modify any files. Output a structured analysis report. Offer an optional remediation plan (user must explicitly approve before any follow-up editing commands would be invoked manually).
+**STRICTLY READ-ONLY**: **Không** modify bất kỳ files nào. Output structured analysis report. Offer optional remediation plan (user phải explicitly approve trước khi bất kỳ follow-up editing commands nào được invoked manually).
 
-**Constitution Authority**: The project constitution (`.specify/memory/constitution.md`) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec, plan, or tasks—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/speckit.analyze`.
+**Constitution Authority**: Project constitution (`.specify/memory/constitution.md`) là **non-negotiable** trong analysis scope này. Constitution conflicts tự động là CRITICAL và require adjustment của spec, plan, hoặc tasks—không phải dilution, reinterpretation, hoặc silent ignoring của principle. Nếu một principle itself cần change, điều đó phải occur trong separate, explicit constitution update bên ngoài `/speckit.analyze`.
 
 ## Execution Steps
 
-### 1. Initialize Analysis Context
+### 1. Khởi tạo Analysis Context
 
-Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks` once from repo root and parse JSON for FEATURE_DIR and AVAILABLE_DOCS. Derive absolute paths:
+Chạy `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks` một lần từ repo root và parse JSON cho FEATURE_DIR và AVAILABLE_DOCS. Derive absolute paths:
 
 - SPEC = FEATURE_DIR/spec.md
 - PLAN = FEATURE_DIR/plan.md
 - TASKS = FEATURE_DIR/tasks.md
 
-Abort with an error message if any required file is missing (instruct the user to run missing prerequisite command).
-For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+Abort với error message nếu bất kỳ required file nào missing (instruct user chạy missing prerequisite command).
+Với single quotes trong args như "I'm Groot", dùng escape syntax: ví dụ 'I'\''m Groot' (hoặc double-quote nếu có thể: "I'm Groot").
 
 ### 2. Load Artifacts (Progressive Disclosure)
 
-Load only the minimal necessary context from each artifact:
+Load chỉ minimal necessary context từ mỗi artifact:
 
-**From spec.md:**
-
+**Từ spec.md:**
 - Overview/Context
 - Functional Requirements
 - Non-Functional Requirements
 - User Stories
-- Edge Cases (if present)
+- Edge Cases (nếu present)
 
-**From plan.md:**
-
+**Từ plan.md:**
 - Architecture/stack choices
 - Data Model references
 - Phases
 - Technical constraints
 
-**From tasks.md:**
-
+**Từ tasks.md:**
 - Task IDs
 - Descriptions
 - Phase grouping
 - Parallel markers [P]
 - Referenced file paths
 
-**From constitution:**
-
-- Load `.specify/memory/constitution.md` for principle validation
+**Từ constitution:**
+- Load `.specify/memory/constitution.md` cho principle validation
 
 ### 3. Build Semantic Models
 
-Create internal representations (do not include raw artifacts in output):
+Tạo internal representations (không include raw artifacts trong output):
 
-- **Requirements inventory**: Each functional + non-functional requirement with a stable key (derive slug based on imperative phrase; e.g., "User can upload file" → `user-can-upload-file`)
-- **User story/action inventory**: Discrete user actions with acceptance criteria
-- **Task coverage mapping**: Map each task to one or more requirements or stories (inference by keyword / explicit reference patterns like IDs or key phrases)
-- **Constitution rule set**: Extract principle names and MUST/SHOULD normative statements
+- **Requirements inventory**: Mỗi functional + non-functional requirement với stable key
+- **User story/action inventory**: Discrete user actions với acceptance criteria
+- **Task coverage mapping**: Map mỗi task tới một hoặc nhiều requirements hoặc stories
+- **Constitution rule set**: Extract principle names và MUST/SHOULD normative statements
 
 ### 4. Detection Passes (Token-Efficient Analysis)
 
-Focus on high-signal findings. Limit to 50 findings total; aggregate remainder in overflow summary.
+Focus vào high-signal findings. Limit tới 50 findings total; aggregate remainder trong overflow summary.
 
 #### A. Duplication Detection
-
 - Identify near-duplicate requirements
-- Mark lower-quality phrasing for consolidation
+- Đánh dấu lower-quality phrasing cho consolidation
 
 #### B. Ambiguity Detection
-
-- Flag vague adjectives (fast, scalable, secure, intuitive, robust) lacking measurable criteria
+- Flag vague adjectives (fast, scalable, secure, intuitive, robust) thiếu measurable criteria
 - Flag unresolved placeholders (TODO, TKTK, ???, `<placeholder>`, etc.)
 
 #### C. Underspecification
-
-- Requirements with verbs but missing object or measurable outcome
-- User stories missing acceptance criteria alignment
-- Tasks referencing files or components not defined in spec/plan
+- Requirements với verbs nhưng thiếu object hoặc measurable outcome
+- User stories thiếu acceptance criteria alignment
+- Tasks referencing files hoặc components không defined trong spec/plan
 
 #### D. Constitution Alignment
-
-- Any requirement or plan element conflicting with a MUST principle
-- Missing mandated sections or quality gates from constitution
+- Bất kỳ requirement hoặc plan element nào conflicting với MUST principle
+- Thiếu mandated sections hoặc quality gates từ constitution
 
 #### E. Coverage Gaps
-
-- Requirements with zero associated tasks
-- Tasks with no mapped requirement/story
-- Non-functional requirements not reflected in tasks (e.g., performance, security)
+- Requirements với zero associated tasks
+- Tasks với no mapped requirement/story
+- Non-functional requirements không reflected trong tasks (ví dụ: performance, security)
 
 #### F. Inconsistency
-
 - Terminology drift (same concept named differently across files)
-- Data entities referenced in plan but absent in spec (or vice versa)
-- Task ordering contradictions (e.g., integration tasks before foundational setup tasks without dependency note)
-- Conflicting requirements (e.g., one requires Next.js while other specifies Vue)
+- Data entities referenced trong plan nhưng absent trong spec (hoặc vice versa)
+- Task ordering contradictions (ví dụ: integration tasks trước foundational setup tasks mà không có dependency note)
+- Conflicting requirements (ví dụ: một requires Next.js trong khi khác specifies Vue)
 
 ### 5. Severity Assignment
 
-Use this heuristic to prioritize findings:
+Dùng heuristic này để prioritize findings:
 
-- **CRITICAL**: Violates constitution MUST, missing core spec artifact, or requirement with zero coverage that blocks baseline functionality
-- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion
-- **MEDIUM**: Terminology drift, missing non-functional task coverage, underspecified edge case
-- **LOW**: Style/wording improvements, minor redundancy not affecting execution order
+- **CRITICAL**: Vi phạm constitution MUST, thiếu core spec artifact, hoặc requirement với zero coverage blocks baseline functionality
+- **HIGH**: Duplicate hoặc conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion
+- **MEDIUM**: Terminology drift, thiếu non-functional task coverage, underspecified edge case
+- **LOW**: Style/wording improvements, minor redundancy không affecting execution order
 
-### 6. Produce Compact Analysis Report
+### 6. Tạo Compact Analysis Report
 
-Output a Markdown report (no file writes) with the following structure:
+Output Markdown report (no file writes) với structure sau:
 
 ## Specification Analysis Report
 
-| ID | Category | Severity | Location(s) | Summary | Recommendation |
-|----|----------|----------|-------------|---------|----------------|
-| A1 | Duplication | HIGH | spec.md:L120-134 | Two similar requirements ... | Merge phrasing; keep clearer version |
+| ID | Category | Severity | Location(s) | Tóm tắt | Khuyến nghị |
+|----|----------|----------|-------------|---------|-------------|
+| A1 | Duplication | HIGH | spec.md:L120-134 | Hai similar requirements ... | Merge phrasing; giữ clearer version |
 
-(Add one row per finding; generate stable IDs prefixed by category initial.)
+(Thêm một row per finding; generate stable IDs prefixed by category initial.)
 
 **Coverage Summary Table:**
 
-| Requirement Key | Has Task? | Task IDs | Notes |
-|-----------------|-----------|----------|-------|
+| Requirement Key | Có Task? | Task IDs | Ghi chú |
+|-----------------|----------|----------|---------|
 
-**Constitution Alignment Issues:** (if any)
+**Constitution Alignment Issues:** (nếu có)
 
-**Unmapped Tasks:** (if any)
+**Unmapped Tasks:** (nếu có)
 
 **Metrics:**
 
 - Total Requirements
 - Total Tasks
-- Coverage % (requirements with >=1 task)
+- Coverage % (requirements với >=1 task)
 - Ambiguity Count
 - Duplication Count
 - Critical Issues Count
 
 ### 7. Provide Next Actions
 
-At end of report, output a concise Next Actions block:
+Ở cuối report, output concise Next Actions block:
 
-- If CRITICAL issues exist: Recommend resolving before `/speckit.implement`
-- If only LOW/MEDIUM: User may proceed, but provide improvement suggestions
-- Provide explicit command suggestions: e.g., "Run /speckit.specify with refinement", "Run /speckit.plan to adjust architecture", "Manually edit tasks.md to add coverage for 'performance-metrics'"
+- Nếu CRITICAL issues exist: Recommend resolving trước `/speckit.implement`
+- Nếu chỉ LOW/MEDIUM: User có thể proceed, nhưng provide improvement suggestions
+- Provide explicit command suggestions
 
 ### 8. Offer Remediation
 
-Ask the user: "Would you like me to suggest concrete remediation edits for the top N issues?" (Do NOT apply them automatically.)
+Hỏi user: "Mày có muốn tao suggest concrete remediation edits cho top N issues không?" (KHÔNG apply chúng automatically.)
 
 ## Operating Principles
 
 ### Context Efficiency
-
-- **Minimal high-signal tokens**: Focus on actionable findings, not exhaustive documentation
-- **Progressive disclosure**: Load artifacts incrementally; don't dump all content into analysis
-- **Token-efficient output**: Limit findings table to 50 rows; summarize overflow
-- **Deterministic results**: Rerunning without changes should produce consistent IDs and counts
+- **Minimal high-signal tokens**: Focus vào actionable findings, không phải exhaustive documentation
+- **Progressive disclosure**: Load artifacts incrementally
+- **Token-efficient output**: Limit findings table tới 50 rows
+- **Deterministic results**: Rerunning mà không có changes phải produce consistent IDs và counts
 
 ### Analysis Guidelines
-
-- **NEVER modify files** (this is read-only analysis)
-- **NEVER hallucinate missing sections** (if absent, report them accurately)
-- **Prioritize constitution violations** (these are always CRITICAL)
-- **Use examples over exhaustive rules** (cite specific instances, not generic patterns)
-- **Report zero issues gracefully** (emit success report with coverage statistics)
+- **KHÔNG BAO GIỜ modify files** (đây là read-only analysis)
+- **KHÔNG BAO GIỜ hallucinate missing sections**
+- **Prioritize constitution violations** (chúng luôn CRITICAL)
+- **Dùng examples over exhaustive rules**
+- **Report zero issues gracefully**
 
 ## Context
 
